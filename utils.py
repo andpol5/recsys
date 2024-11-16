@@ -1,5 +1,6 @@
 import torch
 
+
 def get_available_device():
     device = torch.device("cpu")
     if torch.cuda.is_available():

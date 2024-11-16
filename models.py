@@ -1,9 +1,10 @@
+from enum import IntEnum
 from typing import List, Tuple
+
+import pandas as pd
 import torch
 import torch.nn.functional as F
 from torch import nn
-from enum import IntEnum
-import pandas as pd
 
 from dataset import RatingFormat
 
@@ -104,7 +105,6 @@ def get_fm_loss(emb_cat: torch.Tensor):
     sum_of_square = torch.sum(emb_cat * emb_cat, dim=1, keepdim=True)
     cross_term = square_of_sum - sum_of_square
     cross_term = 0.5 * torch.sum(cross_term, dim=2, keepdim=False)
-
     return cross_term
 
 

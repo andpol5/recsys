@@ -1,6 +1,7 @@
-from math import log2
 import random
+from math import log2
 from typing import List
+
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
@@ -57,9 +58,7 @@ def catalog_coverage_score(predicted: List[list], catalog: list, k: int) -> floa
 
 
 def personalization_score(predicted: np.ndarray) -> float:
-
     similarity = cosine_similarity(X=predicted, dense_output=False)
-
     dim = similarity.shape[0]
     personalization = (similarity.sum() - dim) / (dim * (dim - 1))
     return 1 - personalization

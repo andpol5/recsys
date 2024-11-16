@@ -1,13 +1,15 @@
-import numpy as np
-import pandas as pd
-from torch.utils.data import Dataset
-from enum import IntEnum
-from numpy.random import choice, randint
-from typing import List
-from tabulate import tabulate
 import os
 import sys
+from enum import IntEnum
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
 import torch
+from numpy.random import choice, randint
+from tabulate import tabulate
+from torch.utils.data import Dataset
+
 
 
 class RatingFormat(IntEnum):
@@ -38,35 +40,17 @@ class MovieLens20MDataset(Dataset):
         max_rows: int = sys.maxsize,
         max_users: int = None,
     ):
+        dataset_path = Path(dataset_path)
         self.emb_columns: List[str] = ["userId", "movieId"]
         self.pred_column: str = "rating"
 
-        ratings_data = pd.read_csv(
-            os.path.join(dataset_path, "ratings.csv"),
-            sep=",",
-            header="infer",
-            nrows=max_rows,
-        ).dropna()
-
-        genres_data = pd.read_csv(
-            os.path.join(dataset_path, "movies.csv"),
-            sep=",",
-            engine="pyarrow",
-            header="infer",
-        )
+        ratings_data = pd.read_csv(dataset_path / "ratings.csv", sep=",", header="infer", nrows=max_rows).dropna()
+        genres_data = pd.read_csv(dataset_path / "movies.csv", sep=",", engine="pyarrow", header="infer")
         primary_genre_per_movie = genres_data["genres"].str.split("|").str[0]
         self.movie_genres = pd.concat([genres_data["movieId"], primary_genre_per_movie])
 
-        self.feature_sizes: List[int] = [
-            ratings_data[x].max() + 1 for x in self.emb_columns
-        ]
-
-        self.movie_data = pd.read_csv(
-            os.path.join(dataset_path, "movies.csv"),
-            sep=",",
-            engine="pyarrow",
-            header="infer",
-        )
+        self.feature_sizes: List[int] = [ratings_data[x].max() + 1 for x in self.emb_columns]
+        self.movie_data = pd.read_csv(dataset_path / "movies.csv", sep=",", engine="pyarrow", header="infer")
 
         self.ratings_data = ratings_data
         self.neg_threshold = 2.5
@@ -81,15 +65,10 @@ class MovieLens20MDataset(Dataset):
         no_users = self.ratings_data["userId"].max()
         no_movies = self.ratings_data["movieId"].max()
         self.no_samples = self.ratings_data.shape[0]
-        print(
-            f"Number of users: {no_users} | Number of movies: {no_movies} | Number of samples: {self.no_samples}"
-        )
-
+        print(f"Number of users: {no_users} | Number of movies: {no_movies} | Number of samples: {self.no_samples}")
         self.return_format = return_format
 
-    def display_recommendation_output(
-        self, user_id: int, pred_ids: np.ndarray, true_ids: np.ndarray
-    ):
+    def display_recommendation_output(self, user_id: int, pred_ids: np.ndarray, true_ids: np.ndarray):
         """Returns a dictionary of movie names and genres for a batch of movie IDs"""
         pred_data = self.movie_data.iloc[pred_ids]
         true_data = self.movie_data.iloc[true_ids]
@@ -110,8 +89,8 @@ class MovieLens20MDataset(Dataset):
         # print('index', index, 'features', features, 'rating', rating)
         return features, rating
 
-class CriteoDataset(Dataset):
 
+class CriteoDataset(Dataset):
     def __init__(self) -> None:
         super().__init__()
 
@@ -125,6 +104,7 @@ class CriteoDataset(Dataset):
     
     def __getitem__(self, index):
         return self.features[index], self.labels[index]
+
 
 class DatasetSource(IntEnum):
     MOVIELENS = 1
